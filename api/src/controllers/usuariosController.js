@@ -1,67 +1,83 @@
-const { futimes } = require("node:fs");
-
 const usuarios = [];
 
-
-function listar(req,res) {
-
-    res.json(usuarios);
-    
+function nomeEhValido(nome) {
+    return typeof nome === "string" && nome.trim() !== "";
 }
 
-function criar(req,res) {
+function buscarUsuarioPorId(id) {
+    return usuarios.find(function(usuario) {
+        return usuario.id === id;
+    });
+}
+
+function listar(req, res) {
+    res.json(usuarios);
+}
+
+function buscarPorId(req, res) {
+    const id = Number(req.params.id);
+    const usuario = buscarUsuarioPorId(id);
+
+    if (!usuario) {
+        return res.status(404).json({ mensagem: "Usuario nao encontrado" });
+    }
+
+    res.json(usuario);
+}
+
+function criar(req, res) {
+    if (!nomeEhValido(req.body.nome)) {
+        return res.status(400).json({ mensagem: "Nome e obrigatorio" });
+    }
 
     const usuario = {
         id: usuarios.length + 1,
-        nome: req.body.nome,
+        nome: req.body.nome.trim(),
         idade: req.body.idade
     };
 
     usuarios.push(usuario);
 
-    res.json(usuario);
-    
+    res.status(201).json(usuario);
 }
 
-function atualizar(req,res) {
-
+function atualizar(req, res) {
     const id = Number(req.params.id);
-
-    const usuario = usuarios.find(function(u) {
-        return u.id === id;
-    });
+    const usuario = buscarUsuarioPorId(id);
 
     if (!usuario) {
-        return res.send("Usuário não encontrado");
+        return res.status(404).json({ mensagem: "Usuario nao encontrado" });
     }
 
-    usuario.nome = req.body.nome;
+    if (!nomeEhValido(req.body.nome)) {
+        return res.status(400).json({ mensagem: "Nome e obrigatorio" });
+    }
+
+    usuario.nome = req.body.nome.trim();
     usuario.idade = req.body.idade;
 
     res.json(usuario);
-    
 }
 
-function deletar(req,res) {
+function deletar(req, res) {
+    const id = Number(req.params.id);
+    const indice = usuarios.findIndex(function(usuario) {
+        return usuario.id === id;
+    });
 
+    if (indice === -1) {
+        return res.status(404).json({ mensagem: "Usuario nao encontrado" });
+    }
 
-  const id = Number(req.params.id);
+    usuarios.splice(indice, 1);
 
-  const indice = usuarios.findIndex(function(u) {
-    return u.id === id;
-  });
-
-
-  if (indice === -1){
-    return res.send("Usuário não encontrado");
-  }
-
-  usuarios.splice(indice, 1)
-
-  res.send("Usuário deletado");
-
+    res.json({ mensagem: "Usuario deletado" });
 }
 
 module.exports = {
-    listar,criar,atualizar,deletar
+    listar,
+    buscarPorId,
+    criar,
+    atualizar,
+    deletar
 };
