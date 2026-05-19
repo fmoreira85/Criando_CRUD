@@ -41,3 +41,27 @@ function atualizar(req,res) {
     res.json(usuario);
     
 }
+
+function deletar(req,res) {
+
+
+  const id = Number(req.params.id);
+
+  const indice = usuarios.findIndex(function(u) {
+    return u.id === id;
+  });
+
+
+  if (indice === -1){
+    return res.send("Usuário não encontrado");
+  }
+
+  usuarios.splice(indice, 1)
+
+  res.send("Usuário deletado");
+
+}
+
+module.exports = {
+    listar,criar,atualizar,deletar
+};
